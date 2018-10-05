@@ -428,8 +428,10 @@ module.exports = class Coordinator {
 		if( this.verbose ) { this.log( "All stages finished." ); }
 
 		if( this.rollback ) {
+			if( this.verbose ) { this.log( "Processing failed." ); }
 			this.callback.failure( "failed because of stage \"" + this.failed + "\"" );
 		} else {
+			if( this.verbose ) { this.log( "Processing succeeded." ); }
 			this.callback.success( this.results ); 
 		}
 		
