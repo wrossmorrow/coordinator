@@ -1,6 +1,6 @@
 # Coordinator
 
-This is a `node.js` module for specifying asynchronous operations in a Directed Acyclic Graph (DAG) structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles). Everything you need is in the single file `coordinator.js`. 
+This is a `node.js` module for specifying asynchronous operations in a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles). Everything you need is in the single file `coordinator.js`. 
 
 ### A Simple, Motivating Example
 
@@ -36,7 +36,7 @@ We haven't mentioned how tasks can "fail" or "succeed". Really, this is up to yo
 ```
 ( data , failure , warning , success ) => { ... }
 ```
-`Coordinator` expects these routines to call `failure(err)` (with an error argument) when there is an error, `warning(warn,res)` when there is a conditional success (with a warning and result objects), and `success(res)` when there is success (with a result object). 
+`Coordinator` expects these routines to call `failure(err)` (with an error argument) when there is an error, `warning(warn,res)` when there is a conditional success (with a warning and result objects), and `success(res)` when there is success (with a result object). Otherwise they can do what you want. 
 
 
 
