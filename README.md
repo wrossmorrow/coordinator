@@ -73,7 +73,7 @@ The specific values `{ "bob" : 2 , "sue" : 3 , "joe" : 4 }` ultimately yeilds
 success: 9
 ```
 
-**Note** that our `sumr` callback here does something weird: it sets a timeout to execute a simple function. This is, actually, required (as of now). `Coordinator` is intended for _asynchronous_ tasks that act in some way like "forked" processes. It is not suitable for, and can (now) get confused by, traditional sequential programs as executors. 
+**Note** that our `sumr` callback here does something weird: it sets a timeout to execute a simple function. This is, actually, required (as of now), even if we set the timeout to `0` instead of `10`. `Coordinator` is intended for _asynchronous_ tasks that act in some way like "forked" processes. It is not suitable for, and can (as of now) get confused by, traditional sequential programs as executors. 
 
 ### Execution/Rollback Routine Prototype
 
