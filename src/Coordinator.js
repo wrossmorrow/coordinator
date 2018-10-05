@@ -1,9 +1,29 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * 
+ * 
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 'use strict';
 
 const EventEmitter = require( 'events' );
+const _crypto = require( 'crypto' );
 
+// uniform time
 const getTime = () => ( new Date( Date.now() ).toISOString() );
+
+// get a random hash
+const getHash = () => {
+    var current_date = ( new Date() ).valueOf().toString();
+    var random = Math.random().toString();
+    return String( _crypto.createHash('sha1').update( current_date + random ).digest('hex') );
+}
+
+const log = ( s ) => { console.log( getTime() + ": " + s ); }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
@@ -30,6 +50,8 @@ module.exports = class Coordinator {
 	
 	constructor( ) {
 
+		this._id = getHash();			// some random digits
+
 		this.verbose  = true; 
 		this.rollbackInOrder = false;	// placeholder for flag to rollback in order
 		this.stages   = {}; 			// object for storage of stages to execute
@@ -44,16 +66,6 @@ module.exports = class Coordinator {
 		this.warnings = {}; 			// warnings object
 		this.results  = {};				// results object
 		this.partials = false; 			// do we store and return partial results? 
-		
-		/*
-		this._success  = this._success.bind(this);
-		this._warning  = this._warning.bind(this);
-		this._failure  = this._failure.bind(this);
-		this._rollback = this._rollback.bind(this);
-		this._finished = this._finished.bind(this);
-
-		this.clear = this.clear.bind(this);
-		*/
 
 		this.emitter = new EventEmitter();
 		this.emitter.on( 'success'  , this._success.bind(this) );
@@ -64,38 +76,54 @@ module.exports = class Coordinator {
 
 	}
 
+	log( s ) { log( "Coordinator(" + this._id + "):: " + s ); }
+
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * 
-	 * Coordinator Stage Run Handler... 
+	 * Coordinator Stage Run Handler(s)... 
 	 * 
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+	_stageFailure( key , err )  	  { this.emitter.emit( 'failure' , key , err ); }
+	_stageWarning( key , warn , res ) { this.emitter.emit( 'warning' , key , warn , res ); }
+	_stageSuccess( key , res ) 		  { this.emitter.emit( 'success' , key , res ); }
+
 	_runstage( key ) {
 
-		if( this.verbose ) { console.log( getTime() + " Coordinator:: Running stage \"" 
-											+ key + "\" " 
-											+ JSON.stringify( this.stages[key].prereqs ) ); }
+		if( this.verbose ) { this.log( "Running stage \"" 
+									+ key + "\" " 
+									+ JSON.stringify( this.stages[key].prereqs ) ); }
 
 		this.running += 1;
 		this.started[key] = Date.now();
 
+		var runData = ( this.stages[key].data === Object( this.stages[key].data ) 
+							? Object.assign( {} , this.stages[key].data )
+							: this.stages[key].data );
+
 		// if there are prerequisites, we may need to prepare data based on the results
 		// of those stages... this must be a synchronous call, if it is provided
 		if( this.stages[key].prereqs.length > 0 && this.stages[key].prepare ) {
-			this.stages[key].data = this.stages[key].prepare( 	this.stages[key].data , 
-																this.stages[key].prereqs , // this can be useful if we don't use explicit keys
-																this.results );
+
+			runData 
+				= this.stages[key].prepare( 	
+					runData , 
+					this.stages[key].prereqs , // this can be useful if we don't use explicit keys
+					this.results 
+				);
 		}
 
 		// execute stage
-		this.stages[key].execute( this.stages[key].data , 
-									( err ) => this.emitter.emit( 'failure' , key , err ) ,
-									( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
-									( res ) => this.emitter.emit( 'success' , key , res ) );
+		this.stages[key].execute( 
+			runData , 
+			this._stageFailure.bind( this , key ) , // ( err ) => this.emitter.emit( 'failure' , key , err ) ,
+			this._stageWarning.bind( this , key ) , // ( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
+			this._stageSuccess.bind( this , key ) , // ( res ) => this.emitter.emit( 'success' , key , res ) 
+		);
 		
 	}
 
@@ -115,10 +143,12 @@ module.exports = class Coordinator {
 		if( stage.rollback ) {
 			this.running += 1;
 			this.started[key] = Date.now();
-			stage.rollback( stage.data , 
-							( err ) => this.emitter.emit( 'failure' , key , err ) ,
-							( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
-							( res ) => this.emitter.emit( 'success' , key , res ) );
+			stage.rollback( 
+				stage.data ,
+				( err ) => this.emitter.emit( 'failure' , key , err ) ,
+				( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
+				( res ) => this.emitter.emit( 'success' , key , res ) 
+			);
 		} else { this.emitter.emit( 'success' , key ); }
 
 	}
@@ -143,7 +173,7 @@ module.exports = class Coordinator {
 
 			if( this.started[key] < this.rollback ) { // rollback initiated while this stage was executing... 
 
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" succeeded, but now needs to rollback." ); }
+				if( this.verbose ) { this.log( "Stage \"" + key + "\" succeeded, but now needs to rollback." ); }
 				
 				// for consistency, we have to do this stuff
 				if( this.partials ) { this.results[key] = res; } // do we need to copy? 
@@ -155,7 +185,7 @@ module.exports = class Coordinator {
 
 			} else { // "proper" rollback, as in we actually executed rollback to get here
 
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" rollback succeeded." ); }
+				if( this.verbose ) { this.log( "Stage \"" + key + "\" rollback succeeded." ); }
 				if( ! this.partials ) { delete this.results[key]; } // if we do not store partial results, delete results
 				this.state[key]    = 0; // rollback state for this stage
 				this.progress     -= 1; // keep track of rollbacks that have succeeded
@@ -176,7 +206,7 @@ module.exports = class Coordinator {
 
 		} else {
 
-			if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" succeeded." ); }
+			if( this.verbose ) { this.log( "Stage \"" + key + "\" succeeded." ); }
 
 			this.results[key]  = res; // do we need to copy? 
 			this.state[key]    = 1; // set state for this stage
@@ -220,7 +250,7 @@ module.exports = class Coordinator {
 
 			if( this.started[key] < this.rollback ) { // rollback initiated * while * this stage was executing
 
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" succeeded (with a warning), but now needs to rollback." ); }
+				if( this.verbose ) { this.log( "Stage \"" + key + "\" succeeded (with a warning), but now needs to rollback." ); }
 				
 				// for consistency, we have to do this stuff
 				if( this.partials ) { this.results[key] = res; } // do we need to copy? 
@@ -233,7 +263,7 @@ module.exports = class Coordinator {
 
 			} else { // "proper" rollback, as in we actually executed rollback to get here
 
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" rollback succeeded with a warning: " + warn.toString() ); }
+				if( this.verbose ) { this.log( "Stage \"" + key + "\" rollback succeeded with a warning: " + warn.toString() ); }
 				if( ! this.partials ) { delete this.results[key]; } // if we do not store partial results, delete results
 				
 				this.state[key]    = 0; // rollback state for this stage
@@ -256,7 +286,7 @@ module.exports = class Coordinator {
 
 		} else {
 
-			if( this.verbose ) { console.log( getTime() + " Coordinator:: Stage \"" + key + "\" succeeded with a warning: " + warn.toString() ); }
+			if( this.verbose ) { this.log( "Stage \"" + key + "\" succeeded with a warning: " + warn.toString() ); }
 			
 			this.results[key]  = res; // do we need to copy? 
 			this.state[key]    = 1; // set state for this stage
@@ -309,7 +339,7 @@ module.exports = class Coordinator {
 				if( this.verbose ) { 
 					var time = getTime();
 					console.log( time + " Coordinator:: Stage \"" + key + "\" failed: " + err.toString() ); 
-					console.log( " ".repeat( time.length + 12 )  + ":: Retry skipped because we are already in a rollback state." ); 
+					log( " ".repeat( time.length + 12 )  + ":: Retry skipped because we are already in a rollback state." ); 
 				}
 
 				// we don't need to rollback, because... 
@@ -336,14 +366,13 @@ module.exports = class Coordinator {
 			delete this.started[key]; // delete started time, which serves as a flag
 
 			if( this.verbose ) { 
-				console.log( getTime() + " Coordinator:: Stage \"" + key + "\" failed: " );
-				console.log( err.toString() ); 
+				this.log( "Stage \"" + key + "\" failed: " + err.toString() ); 
 			}
 
 			var stage = this.stages[key];
 			if( stage.retries + this.state[ key ] <= 0 ) { // we have failed, and have to initiate rollback/return process
 
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: -- This run attempt will have to be aborted. --" ); }
+				if( this.verbose ) { this.log( "-- This run attempt will have to be aborted. --" ); }
 
 				// flag that we are rolling back changes starting ... now
 				this.rollback = Date.now();
@@ -375,7 +404,7 @@ module.exports = class Coordinator {
 			} else {
 
 				this.state[key] -= 1;
-				if( this.verbose ) { console.log( getTime() + " Coordinator:: Re-trying stage \"" + key + "\"" ); }
+				if( this.verbose ) { this.log( "Re-trying stage \"" + key + "\"" ); }
 				this._runstage( key ); 
 
 			}
@@ -396,7 +425,7 @@ module.exports = class Coordinator {
 
 	_finished(  ) { 
 
-		if( this.verbose ) { console.log( getTime() + " Coordinator:: All stages finished." ); }
+		if( this.verbose ) { this.log( "All stages finished." ); }
 
 		if( this.rollback ) {
 			this.callback.failure( "failed because of stage \"" + this.failed + "\"" );
@@ -410,11 +439,30 @@ module.exports = class Coordinator {
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * 
+	 * Coordinator "Getter" Routines
+	 * 
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	getId() { return this._id; }
+
+	getResults() { return this.results; }
+
+	getStages() { return Object.keys( this.stages ).join(", "); }
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * 
 	 * Coordinator Setup Routines
 	 * 
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	
+	quiet() { this.verbose = false; }
+	loud() { this.verbose = true; }
 
 	// Add a single stage... 
 	//
@@ -442,16 +490,17 @@ module.exports = class Coordinator {
 	//
 	addStage( key , execute , rollback , retries , prereqs , prepare , data ) {
 		if( key in this.stages ) { return; }
-		this.stages[key] = { 	execute  : execute , 
-								rollback : rollback , 
-								retries  : retries , 
-								prereqs  : Object.assign( [] , prereqs ) , 
-								prepare  : prepare , 
-								data 	 : Object.assign( {} , data ) , 
-								next 	 : [] , // this will have to be filled in by plan()
-								ready 	 : 1 , // may be overwritten by plan()
-								nincr    : 0.0 // may be overwritten by plan()
-							};
+		this.stages[key] = { 	
+			execute  : execute , 
+			rollback : rollback , 
+			retries  : retries , 
+			prereqs  : ( Array.isArray( prereqs ) ? Object.assign( [] , prereqs ) : [ prereqs ] ) , 
+			prepare  : prepare , 
+			data 	 : ( data === Object(data) ? Object.assign( {} , data ) : data ), 
+			next 	 : [] , // this will have to be filled in by plan()
+			ready 	 : 1 , // may be overwritten by plan()
+			nincr    : 0.0 // may be overwritten by plan()
+		};
 		this.number += 1;
 	}
 
@@ -467,12 +516,14 @@ module.exports = class Coordinator {
 	// 
 	addStages( stages ) {
 		Object.keys( stages ).map( (k,i) => {
-			this.addStage = ( k , 
-							  stages[k].execute , 
-							  stages[k].rollback , 
-							  stages[k].retries , 
-							  stages[k].prereqs ,
-							  stages[k].data );
+			this.addStage = ( 
+				k , 
+				stages[k].execute , 
+				stages[k].rollback , 
+				stages[k].retries , 
+				stages[k].prereqs ,
+				stages[k].data 
+			);
 		} );
 	}
 
@@ -480,8 +531,10 @@ module.exports = class Coordinator {
 	dropStage( key ) {
 		if( Array.isArray(key) ) {
 			key.map( (k,i) => { if( key in this.stages ) { delete this.stages[key]; } } );
+			this.number -= key.length;
 		} else {
 			if( key in this.stages ) { delete this.stages[key]; }
+			this.number -= 1;
 		}
 	}
 
@@ -504,13 +557,16 @@ module.exports = class Coordinator {
 	// then stage B can be run. 
 	plan(  ) {
 
-		Object.keys( this.stages ).map( (k,i) => {
-			if( this.stages[k].prereqs.length > 0 ) {
-				this.stages[k].prereqs.map( (p,j) => {
-					this.stages[p].next.push( k );
+		// initialize, or we will have problems planning multiple times
+		Object.keys( this.stages ).forEach( s => { this.stages[s].next = []; } );
+
+		Object.keys( this.stages ).forEach( s => {
+			if( this.stages[s].prereqs.length > 0 ) {
+				this.stages[s].prereqs.map( (p,j) => { // note we are pushing onto the * prereqs * next array
+					this.stages[p].next.push( s );
 				} );
-				this.stages[k].ready = 0;
-				this.stages[k].nincr = 1.0 / parseFloat( this.stages[k].prereqs.length );
+				this.stages[s].ready = 0;
+				this.stages[s].nincr = 1.0 / parseFloat( this.stages[s].prereqs.length );
 			}
 		} );
 
@@ -521,16 +577,16 @@ module.exports = class Coordinator {
 	// run yet... 
 	nalp(  ) {
 
-		// create an empty, new reverse execution plan
+		// create an empty, new * reverse * execution plan
 		var new_next = {};
-		Object.keys( this.stages ).map( (k,i) => { new_next[k] = []; } );
+		Object.keys( this.stages ).forEach( s => { new_next[s] = []; } );
 
 		// actually populate this new plan
-		Object.keys( this.stages ).map( (k,i) => {
+		Object.keys( this.stages ).forEach( (k,i) => {
 			if( this.stages[k].next.length > 0 ) {
 				this.stages[k].nincr = 1.0 / parseFloat( this.stages[k].next.length );
 				this.stages[k].ready = 0;
-				this.stages[k].next.map( (n,j) => {
+				this.stages[k].next.forEach( (n,j) => {
 					// for each "next" element p in stage k, make k a "next" element
 					// of p... but we can't overwrite p.next until we are done...
 					new_next[n].next.push( k ); 
@@ -541,9 +597,9 @@ module.exports = class Coordinator {
 			}
 		} );
 
-		// replace each stage's next map with this reverse plan
-		Object.keys( this.stages ).map( (k,i) => { 
-			this.stages[k].next = new_next[k];
+		// replace each stage's "next" map with this reverse plan
+		Object.keys( this.stages ).forEach( s => { 
+			this.stages[s].next = new_next[s];
 		} );
 
 	}
@@ -560,6 +616,7 @@ module.exports = class Coordinator {
 
 	// clear * everything * out of this coordinator
 	clear() {
+		this.log( "clearing..." );
 		this.verbose  = true; 
 		this.rollbackInOrder = false;	// placeholder for flag to rollback in order
 		this.stages   = {}; 			// object for storage of stages to execute
@@ -586,24 +643,37 @@ module.exports = class Coordinator {
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-	run( failure , success ) {
+	run( failure , success , data ) {
 
-		console.log( "Coordinator here..." )
+		if( this.verbose ) { this.log( "running..." ); }
 		
 		this.callback = { failure : failure , success : success };
 
-		// initialize "stage state" object
-		Object.keys( this.stages ).map( (k,i) => { this.state[k] = 0; } );
+		if( typeof data !== "undefined" ) {
+			Object.keys( data ).forEach( s => { 
+				if( s in this.stages ) {
+					this.stages[s].data = data[s]; 
+				}
+			} );
+		}
+
+		// initialize "stage state" object (done on run, so we don't have to "reset")
+		Object.keys( this.stages ).forEach( s => { this.state[s] = 0; } );
+
+		this.started  = {}; 			// started timestamps
+		this.running  = 0;				// initialize running count to zero
+		this.progress = 0;				// initialize progress count to zero
+		this.rollback = undefined; 		// are we rolling back? 
+		this.failed   = undefined; 		// which stage failed? 
+		this.warnings = {}; 			// warnings object
+		this.results  = {};				// results object
 
 		// make sure the forward execution plan is prepared
 		this.plan();
 
 		// attempt to execute all the stages that have * no * prerequisites
 		Object.keys( this.stages ).map( (key,i) => {
-			var stage = this.stages[key];
-			if( stage.ready >= 1 ) {
-				this._runstage( key );
-			}
+			if( this.stages[key].ready >= 1 ) { this._runstage( key ); }
 		} );
 
 	}
