@@ -23,7 +23,7 @@ will execute operations "1" and "2" concurrently, calling `onFailure` if *any* o
 Some other features: 
 
 * **Retries:** `C.addStage( "op1" , op1ex , op1rb , 2 )` will retry this operation twice before declaring "failure"
-* **Prerequisites:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] )` declares that operation "2" has to follow operation "1"'s success
+* **Prerequisites:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] )` declares that operation "2" has to follow operation "1"'s success (and that we should _not_ retry on failure)
 * **Intermediate results:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep )` will run `op2prep` on results of operation 1 and pass those to `op2ex`
 * **Initial data:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep , op2data )` will pass `op2data` to `op2ex` when it executes 
 * **Intermediate Data Transformation:** Actually, `op2prep` acts on _both_ `op2data` and the results of prior operations to result in a single data object to pass to `op2ex`
