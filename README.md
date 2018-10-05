@@ -81,7 +81,7 @@ We haven't mentioned how tasks can "fail" or "succeed". Really, this is up to yo
 ```
 ( data , failure , warning , success ) => { ... }
 ```
-`Coordinator` expects these routines to call `failure(err)` (with an error argument) when there is an error, `warning(warn,res)` when there is a conditional success (with a warning and result objects), and `success(res)` when there is success (with a result object). Otherwise they can do what you want. 
+`Coordinator` expects these routines to call `failure(err)` (with an error argument) when there is an error, `warning(warn,res)` when there is a conditional success (with a warning and result objects), and `success(res)` when there is success (with a result object). Otherwise they can do what you want (asynchronously). 
 
 
 # Contact 
