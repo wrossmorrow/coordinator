@@ -616,8 +616,7 @@ module.exports = class Coordinator {
 
 	// clear * everything * out of this coordinator
 	clear() {
-		this.log( "clearing..." );
-		this.verbose  = true; 
+		if( this.verbose ) { this.log( "clearing..." ); }
 		this.rollbackInOrder = false;	// placeholder for flag to rollback in order
 		this.stages   = {}; 			// object for storage of stages to execute
 		this.state    = {}; 			// "stage state" object
@@ -638,6 +637,7 @@ module.exports = class Coordinator {
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * 
 	 * Coordinator Run, given callbacks to invoke upon ultimate failure or success 
+	 * and (optional) data object to replace data for keyed stages
 	 * 
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -694,7 +694,10 @@ module.exports = class Coordinator {
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * 
- * 
+ * Copyright 2018, W. Ross Morrow and Stanford GSB Research Support Services.
+ *  
+ * 		wrossmorrow@stanford.edu
+ *		gsb_circle_research@stanford.edu
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
