@@ -1,0 +1,6 @@
+
+# ignore sublime project files
+*.sublime*
+
+# ignore any autosave files
+*.*~
