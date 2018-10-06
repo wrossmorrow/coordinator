@@ -1,9 +1,5 @@
 
-const X = {
-	"bob" : 2 , 
-	"sue" : 3 , 
-	"joe" : 4 ,
-}
+const X = { "bob" : 2 , "sue" : 3 , "joe" : 4 };
 
 const Coordinator = require( '../src/coordinator.js' );
 
@@ -20,13 +16,11 @@ var C = new Coordinator() , p = [];
 var keys = Object.keys( X );
 for( var i = 0 ; i < keys.length ; i++ ) {
 	var key = keys[i];
-	C.addStage( key , sumr , () => {} , 0 , p , prep , X[key] );
+	C.addStage( key , sumr , null , 0 , p , prep , X[key] );
 	p = [ key ];
 }
 
-C.run( 
-	() => { console.log( "failed" ) } , 
-	() => { 
-		console.log( "success: " + C.getResults()[keys[keys.length-1]] );
-	}
-);
+const failed  = ( e ) => { console.log( "failed: " + e.toString() ); };
+const success = ( r ) => { console.log( "success: " + r[keys[keys.length-1]] ); };
+
+C.run( failed , success );

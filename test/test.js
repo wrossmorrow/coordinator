@@ -49,18 +49,24 @@ var previous = [];
 } );
 // A.quiet();
 
+console.log( A.isDAG() );
+
+var prereq = ["8"];
 ["5","6","7","8"].forEach( s => {
 	B.addStage( 
 		s , 
 		fakeFunction.bind( this , s ) , 
 		noop , 
 		0 , 
-		[] , 
+		prereq , 
 		undefined , 
 		0
 	);
+	prereq = [s];
 } );
 B.quiet();
+
+console.log( B.isDAG() );
 
 var Atimer = setInterval( () => {
 	console.log( A.getId() + ":: coordinated runs (" + A.getStages() + ") starting" );

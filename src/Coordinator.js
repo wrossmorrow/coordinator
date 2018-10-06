@@ -29,7 +29,229 @@ const log = ( s ) => { console.log( getTime() + ": " + s ); }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * 
+ * 									BEGIN tarjan-graph.js
  * 
+ * tarjan-graph module (https://github.com/tmont/tarjan-graph)
+ * 
+ * Packaged in to simplify testing processing graphs for cycles
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+class Vertex {
+
+	constructor(name, successors) {
+		this.name = name;
+		this.successors = successors;
+		this.reset();
+	}
+
+	reset() {
+		this.index = -1;
+		this.lowLink = -1;
+		this.onStack = false;
+		this.visited = false;
+	}
+
+}
+
+class Graph {
+
+	constructor() {
+		this.vertices = {};
+	}
+
+	add(key, descendants) {
+		descendants = Array.isArray(descendants) ? descendants : [descendants];
+
+		const successors = descendants.map((key) => {
+			if (!this.vertices[key]) {
+				this.vertices[key] = new Vertex(key, []);
+			}
+			return this.vertices[key];
+		});
+
+		if (!this.vertices[key]) {
+			this.vertices[key] = new Vertex(key);
+		}
+
+		this.vertices[key].successors = successors.concat([]).reverse();
+		return this;
+	}
+
+	reset() {
+		Object.keys(this.vertices).forEach((key) => {
+			this.vertices[key].reset();
+		});
+	}
+
+	addAndVerify(key, descendants) {
+		this.add(key, descendants);
+		const cycles = this.getCycles();
+		if (cycles.length) {
+			let message = `Detected ${cycles.length} cycle${cycles.length === 1 ? '' : 's'}:`;
+			message += '\n' + cycles.map((scc) => {
+				const names = scc.map(v => v.name);
+				return `  ${names.join(' -> ')} -> ${names[0]}`;
+			}).join('\n');
+
+			const err = new Error(message);
+			err.cycles = cycles;
+			throw err;
+		}
+
+		return this;
+	}
+
+	dfs(key, visitor) {
+		this.reset();
+		const stack = [this.vertices[key]];
+		let v;
+		while (v = stack.pop()) {
+			if (v.visited) {
+				continue;
+			}
+
+			//pre-order traversal
+			visitor(v);
+			v.visited = true;
+
+			v.successors.forEach(w => stack.push(w));
+		}
+	}
+
+	getDescendants(key) {
+		const descendants = [];
+		let ignore = true;
+		this.dfs(key, (v) => {
+			if (ignore) {
+				//ignore the first node
+				ignore = false;
+				return;
+			}
+			descendants.push(v.name);
+		});
+
+		return descendants;
+	}
+
+	hasCycle() {
+		return this.getCycles().length > 0;
+	}
+
+	getStronglyConnectedComponents() {
+		const V = Object.keys(this.vertices).map((key) => {
+			this.vertices[key].reset();
+			return this.vertices[key];
+		});
+
+		let index = 0;
+		const stack = [];
+		const components = [];
+
+		const stronglyConnect = (v) => {
+			v.index = index;
+			v.lowLink = index;
+			index++;
+			stack.push(v);
+			v.onStack = true;
+
+			v.successors.forEach((w) => {
+				if (w.index < 0) {
+					stronglyConnect(w);
+					v.lowLink = Math.min(v.lowLink, w.lowLink);
+				} else if (w.onStack) {
+					v.lowLink = Math.min(v.lowLink, w.index);
+				}
+			});
+
+			if (v.lowLink === v.index) {
+				const scc = [];
+				let w;
+				do {
+					w = stack.pop();
+					w.onStack = false;
+					scc.push(w);
+				} while (w !== v);
+
+				components.push(scc);
+			}
+		};
+
+		V.forEach(function(v) {
+			if (v.index < 0) {
+				stronglyConnect(v);
+			}
+		});
+
+		return components;
+	}
+
+	getCycles() {
+		return this.getStronglyConnectedComponents().filter( (scc) => {
+			if (scc.length > 1) {
+				return true;
+			}
+			const startNode = scc[0];
+			return startNode && startNode.successors.some(node => node === startNode);
+		});
+	}
+
+	clone() {
+		const graph = new Graph();
+
+		Object.keys(this.vertices).forEach((key) => {
+			const v = this.vertices[key];
+			graph.add(v.name, v.successors.map((w) => {
+				return w.name;
+			}));
+		});
+
+		return graph;
+	}
+
+	toDot() {
+		const V = this.vertices;
+		const lines = [ 'digraph {' ];
+
+		this.getCycles().forEach((scc, i) => {
+			lines.push('  subgraph cluster' + i + ' {');
+			lines.push('    color=red;');
+			lines.push('    ' + scc.map(v => v.name).join('; ') + ';');
+			lines.push('  }');
+		});
+
+		Object.keys(V).forEach((key) => {
+			const v = V[key];
+			if (v.successors.length) {
+				v.successors.forEach((w) => {
+					lines.push(`  ${v.name} -> ${w.name}`);
+				});
+			}
+		});
+
+		lines.push('}');
+		return lines.join('\n') + '\n';
+	}
+
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * 
+ * 									END tarjan-graph.js
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * 
+ * Actual Coordinator class
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
@@ -58,6 +280,7 @@ module.exports = class Coordinator {
 		this.state    = {}; 			// "stage state" object
 		this.callback = {}; 			// callbacks (set in run routine)
 		this.number   = 0;				// number of stages that need to run
+		this.planned  = false; 			// whether execution has been "planned"
 		this.started  = {};				// started timestamps
 		this.running  = 0;				// running count
 		this.progress = 0;				// progress of run (successes)
@@ -88,10 +311,12 @@ module.exports = class Coordinator {
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+	// success, failure, warning handlers
 	_stageFailure( key , err )  	  { this.emitter.emit( 'failure' , key , err ); }
 	_stageWarning( key , warn , res ) { this.emitter.emit( 'warning' , key , warn , res ); }
 	_stageSuccess( key , res ) 		  { this.emitter.emit( 'success' , key , res ); }
 
+	// handler to run a given stage
 	_runstage( key ) {
 
 		if( this.verbose ) { this.log( "Running stage \"" 
@@ -137,8 +362,11 @@ module.exports = class Coordinator {
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-	_rollback( key ) {
+	// a special handler for stages that have no (function) rollback passed to them
+	_noRollback( data , failure , warning , success ) { success(); }
 
+	// handler for doing a stage rollback
+	_rollback( key ) {
 		var stage = this.stages[key];
 		if( stage.rollback ) {
 			this.running += 1;
@@ -150,7 +378,6 @@ module.exports = class Coordinator {
 				( res ) => this.emitter.emit( 'success' , key , res ) 
 			);
 		} else { this.emitter.emit( 'success' , key ); }
-
 	}
 
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -388,7 +615,9 @@ module.exports = class Coordinator {
 
 					// if we DO care about staging order, we can ONLY rollback THIS stage and have 
 					// to search through the stages for finished stages with empty "next" sets to 
-					// rollback as well. We would also need to 
+					// rollback as well...
+
+					// TBD
 
 				} else {
 
@@ -492,8 +721,10 @@ module.exports = class Coordinator {
 	//
 	addStage( key , execute , rollback , retries , prereqs , prepare , data ) {
 
-		if( ! key ) { return; }
+		// if there isn't at least one argument, return
+		if( typeof key === "undefined" ) { return; }
 
+		// if there is a single argument, interpret it as an object containing all the parameters
 		if( arguments.length === 1 ) {
 			data 	 = key.data;
 			prepare  = key.prepare;
@@ -504,19 +735,35 @@ module.exports = class Coordinator {
 			key 	 = key.key;
 		}
 
+		// don't add stages more than once (add unique keys only)
 		if( key in this.stages ) { return; }
 
+		// if execute isn't a function, bail
+		if( typeof execute !== "function" ) { return; }
+
+		// clear the plan flag if we're adding a stage... which we'll be doing now
+		if( this.planned ) { this.planned = false; }
+
+		// retries as passed in should be a (base-10) integer
+		var retriesInt = parseInt( retries , 10 );
+
+		// prereqs has to be an empty array
+		if( typeof prereqs === "undefined" ) { prereqs = []; }
+
+		// now, actually define the stage object
 		this.stages[key] = { 	
 			execute  : execute , 
-			rollback : rollback , 
-			retries  : retries , 
+			rollback : ( typeof rollback === "function" ? rollback : this._noRollback ) , 
+			retries  : ( isNaN(retriesInt) ? 0 : retriesInt ) , 
 			prereqs  : ( Array.isArray( prereqs ) ? Object.assign( [] , prereqs ) : [ prereqs ] ) , 
-			prepare  : prepare , 
+			prepare  : ( typeof prepare === "function" ? prepare : null ) , 
 			data 	 : ( data === Object(data) ? Object.assign( {} , data ) : data ), 
 			next 	 : [] , // this will have to be filled in by plan()
 			ready 	 : 1 , // may be overwritten by plan()
 			nincr    : 0.0 // may be overwritten by plan()
 		};
+
+		// increment the number of stages this coordinator is managing
 		this.number += 1;
 		
 	}
@@ -527,31 +774,41 @@ module.exports = class Coordinator {
 	//					rollback : ... , 
 	//					retries  : ... , 
 	//					prereqs  : ... , 
+	//					prepare  : ... , 
 	//					data     : ... } , 
 	//		  key2 : ... 
 	//		}
+	//
+	// or an array
+	// 
+	//		[ { key : ... , ... } , ... ]
 	// 
 	addStages( stages ) {
-		Object.keys( stages ).forEach( (k,i) => {
-			this.addStage = ( 
-				k , 
-				stages[k].execute , 
-				stages[k].rollback , 
-				stages[k].retries , 
-				stages[k].prereqs ,
-				stages[k].data 
-			);
-		} );
+		if( Array.isArray( stages ) ) {
+			stages.forEach( s => { this.addStage( s ); } );
+		} else {
+			Object.keys( stages ).forEach( s => { 
+				this.addStage( { ...stages[s] , key : s } ); 
+			} );
+		}
 	}
 
 	// drop (delete) a stage by key
 	dropStage( key ) {
-		if( Array.isArray(key) ) {
-			key.map( (k,i) => { if( key in this.stages ) { delete this.stages[key]; } } );
-			this.number -= key.length;
+		if( key in this.stages ) { delete this.stages[key]; }
+		this.number -= 1;
+		// clear the plan flag if we've added a stage
+		if( this.planned ) { this.planned = false; }
+	}
+
+	// drop multiple stages by an array or object of keys
+	dropStages( keys ) {
+		if( Array.isArray( keys ) ) {
+			keys.forEach( k => { dropStage(k); } );
+		} else if( keys === Object(keys) ) {
+			Object.keys( keys ).forEach( k => { dropStage(k); } );
 		} else {
-			if( key in this.stages ) { delete this.stages[key]; }
-			this.number -= 1;
+			dropStage( keys );
 		}
 	}
 
@@ -577,19 +834,24 @@ module.exports = class Coordinator {
 		// initialize, or we will have problems planning multiple times
 		Object.keys( this.stages ).forEach( s => { this.stages[s].next = []; } );
 
+		// build out "plan". note we are pushing onto the * prereq's * next array
 		Object.keys( this.stages ).forEach( s => {
 			if( this.stages[s].prereqs.length > 0 ) {
-				this.stages[s].prereqs.map( (p,j) => { // note we are pushing onto the * prereqs * next array
-					this.stages[p].next.push( s );
-				} );
+				this.stages[s].prereqs.forEach( (p,j) => { this.stages[p].next.push( s ); } );
 				this.stages[s].ready = 0;
 				this.stages[s].nincr = 1.0 / parseFloat( this.stages[s].prereqs.length );
 			}
 		} );
 
+		// set flag, if it isn't already set
+		if( ! this.planned ) { this.planned = true; }
+
+		// note we still have to set this.stages[s].ready for stages with prereqs 
+		// before we can run again
+
 	}
 
-	// reverse plan... basically, "next" arrays become "prereqs", implicitly, 
+	// REVERSE plan... basically, "next" arrays become "prereqs", implicitly, 
 	// which become a new "next" plan... BUT we can ignore anything that hasn't been
 	// run yet... 
 	nalp(  ) {
@@ -627,14 +889,19 @@ module.exports = class Coordinator {
 	 * 
 	 * Test Stages for DAG property (no cycles)
 	 * 
+	 * Tarjan algorithm, as implemented by the tarjan-graph module (included explicitly here)
+	 * 
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-	test() {
-
-		
-
+	isDAG() {
+		if( ! this.planned ) { this.plan(); } 			// define the forward execution plan
+		var G = new Graph();							// define a new graph
+		Object.keys( this.stages ).forEach( s => {		// for each stage (vertex)... 
+			G.add( s , this.stages[s].next );			// 	 add each stage as a vertex with 
+		} );											//   its outgoing edges (successors)
+		return ( ! G.hasCycle() );						// if there is no cycle, this is a DAG
 	}
 
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -655,6 +922,7 @@ module.exports = class Coordinator {
 		this.state    = {}; 			// "stage state" object
 		this.callback = {}; 			// callbacks (set in run routine)
 		this.number   = 0;				// number of stages that need to run
+		this.planned  = false; 			// whether execution has been "planned"
 		this.started  = {};				// started timestamps
 		this.running  = 0;				// running count
 		this.progress = 0;				// progress of run (successes)
@@ -678,10 +946,26 @@ module.exports = class Coordinator {
 
 	run( failure , success , data ) {
 
-		if( this.verbose ) { this.log( "running..." ); }
+		// make sure the forward execution plan is prepared (even though we would build it
+		// to test the DAG below)
+		if( ! this.planned ) { this.plan(); }
+
+		// make sure this run won't go on forever, at least because of repeated execution
+		if( this.isDAG() ) {
+			if( this.verbose ) {
+				this.log( "Stages appear to form a DAG (no cycles), can proceed with run." );
+			}
+		} else {
+			var message = "Sorry, these stages do not appear to form a DAG (they have a cycle).";
+			if( this.verbose ) { this.log( message ); }
+			if( failure ) { failure( message ); }
+			return;
+		}
 		
+		// define callbacks for run routine
 		this.callback = { failure : failure , success : success };
 
+		// redefine data if some passed in
 		if( typeof data !== "undefined" ) {
 			Object.keys( data ).forEach( s => { 
 				if( s in this.stages ) {
@@ -690,9 +974,13 @@ module.exports = class Coordinator {
 			} );
 		}
 
-		// initialize "stage state" object (done on run, so we don't have to "reset")
-		Object.keys( this.stages ).forEach( s => { this.state[s] = 0; } );
+		// initialize "stage state" object and the ready value
+		Object.keys( this.stages ).forEach( s => { 
+			this.state[s] = 0; 
+			this.stages[s].ready = ( this.stages[s].prereqs.length > 0 ? 0 : 1 );
+		} );
 
+		// other initializations
 		this.started  = {}; 			// started timestamps
 		this.running  = 0;				// initialize running count to zero
 		this.progress = 0;				// initialize progress count to zero
@@ -701,8 +989,8 @@ module.exports = class Coordinator {
 		this.warnings = {}; 			// warnings object
 		this.results  = {};				// results object
 
-		// make sure the forward execution plan is prepared
-		this.plan();
+		// print if desired
+		if( this.verbose ) { this.log( "running..." ); }
 
 		// attempt to execute all the stages that have * no * prerequisites
 		Object.keys( this.stages ).map( (key,i) => {
@@ -727,10 +1015,14 @@ module.exports = class Coordinator {
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * 
- * Copyright 2018, W. Ross Morrow and Stanford GSB Research Support Services.
+ * Copyright 2018, W. Ross Morrow and Stanford GSB Research Support Services
+ * 
+ * Except tarjan-graph.js, ostensibly copyright Tommy Montgomery (https://github.com/tmont)
  *  
- * 		wrossmorrow@stanford.edu
- *		gsb_circle_research@stanford.edu
+ * Contact: 
+ * 
+ * 		W. Ross Morrow    wrossmorrow@stanford.edu
+ *		Stanfor GSB RSS   gsb_circle_research@stanford.edu
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
