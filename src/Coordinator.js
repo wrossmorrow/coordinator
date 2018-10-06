@@ -491,7 +491,21 @@ module.exports = class Coordinator {
 	//	"execute" and "rollback" (as the first argument)
 	//
 	addStage( key , execute , rollback , retries , prereqs , prepare , data ) {
+
+		if( ! key ) { return; }
+
+		if( arguments.length === 1 ) {
+			data 	 = key.data;
+			prepare  = key.prepare;
+			prereqs  = key.prereqs;
+			retries  = key.retries;
+			rollback = key.rollback;
+			execute  = key.execute;
+			key 	 = key.key;
+		}
+
 		if( key in this.stages ) { return; }
+
 		this.stages[key] = { 	
 			execute  : execute , 
 			rollback : rollback , 
@@ -504,6 +518,7 @@ module.exports = class Coordinator {
 			nincr    : 0.0 // may be overwritten by plan()
 		};
 		this.number += 1;
+		
 	}
 
 	// Add _multiple_ stages, using a formatted object: 
@@ -517,7 +532,7 @@ module.exports = class Coordinator {
 	//		}
 	// 
 	addStages( stages ) {
-		Object.keys( stages ).map( (k,i) => {
+		Object.keys( stages ).forEach( (k,i) => {
 			this.addStage = ( 
 				k , 
 				stages[k].execute , 
@@ -603,6 +618,22 @@ module.exports = class Coordinator {
 		Object.keys( this.stages ).forEach( s => { 
 			this.stages[s].next = new_next[s];
 		} );
+
+	}
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * 
+	 * Test Stages for DAG property (no cycles)
+	 * 
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	test() {
+
+		
 
 	}
 
