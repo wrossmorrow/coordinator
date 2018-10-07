@@ -16,7 +16,7 @@ var C = new Coordinator() , p = [];
 var keys = Object.keys( X );
 for( var i = 0 ; i < keys.length ; i++ ) {
 	var key = keys[i];
-	C.addStage( key , sumr , () => {} , 0 , p , prep , X[key] );
+	C.addStage( key , sumr , () => {} , 0 , p , prep , null , X[key] );
 	p = [ key ];
 }
 

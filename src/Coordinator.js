@@ -319,31 +319,35 @@ module.exports = class Coordinator {
 	// handler to run a given stage
 	_runstage( key ) {
 
-		if( this.verbose ) { this.log( "Running stage \"" 
-									+ key + "\" " 
-									+ JSON.stringify( this.stages[key].prereqs ) ); }
+		// get a convenience object for this stage
+		var stage = this.stages[key];
 
+		// printout if desired
+		if( this.verbose ) { 
+			this.log( "Executing stage \"" + key + "\" " + JSON.stringify( stage.prereqs ) ); 
+		}
+
+		// keep track of how many are running
 		this.running += 1;
+
+		// keep track of when this stage started
 		this.started[key] = Date.now();
 
-		var runData = ( this.stages[key].data === Object( this.stages[key].data ) 
-							? Object.assign( {} , this.stages[key].data )
-							: this.stages[key].data );
+		// initialize data to pass to the stage
+		var runData = ( typeof stage.data !== "undefined" 
+						? ( stage.data === Object( stage.data ) 
+							? Object.assign( {} , stage.data )
+							: stage.data )
+						: {} );
 
 		// if there are prerequisites, we may need to prepare data based on the results
 		// of those stages... this must be a synchronous call, if it is provided
 		if( this.stages[key].prereqs.length > 0 && this.stages[key].prepare ) {
-
-			runData 
-				= this.stages[key].prepare( 	
-					runData , 
-					this.stages[key].prereqs , // this can be useful if we don't use explicit keys
-					this.results 
-				);
+			runData = this.stages[key].prepare( runData , this.stages[key].prereqs , this.results );
 		}
 
 		// execute stage
-		this.stages[key].execute( 
+		stage.execute( 
 			runData , 
 			this._stageFailure.bind( this , key ) , // ( err ) => this.emitter.emit( 'failure' , key , err ) ,
 			this._stageWarning.bind( this , key ) , // ( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
@@ -367,17 +371,45 @@ module.exports = class Coordinator {
 
 	// handler for doing a stage rollback
 	_rollback( key ) {
+
+		// get a convenience object for this stage
 		var stage = this.stages[key];
-		if( stage.rollback ) {
-			this.running += 1;
-			this.started[key] = Date.now();
-			stage.rollback( 
-				stage.data ,
-				( err ) => this.emitter.emit( 'failure' , key , err ) ,
-				( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
-				( res ) => this.emitter.emit( 'success' , key , res ) 
-			);
-		} else { this.emitter.emit( 'success' , key ); }
+
+		// quick response if we don't need to rollback
+		if( typeof stage.rollback !== "function" ) { this.emitter.emit( 'success' , key ); return; }
+
+		// printout if desired
+		if( this.verbose ) {
+			this.log( "Rollback stage \"" + key + "\" " + JSON.stringify( stage.prereqs ) ); 
+		}
+
+		// initialize data to pass to the stage
+		var runData = ( typeof stage.data !== "undefined" 
+						? ( stage.data === Object( stage.data ) 
+							? Object.assign( {} , stage.data )
+							: stage.data )
+						: {} );
+
+		// we may need to prepare ("repair") data for rollback based on the results
+		// of this and earlier stages... this must be a synchronous call, if it is provided
+		if( stage.prereqs.length > 0 && stage.repair ) {
+			runData = stage.repair( runData , stage.prereqs , this.results );
+		}
+
+		// keep track of how many are running
+		this.running += 1;
+
+		// keep track of when this stage started (although is it useful here like in execute?)
+		this.started[key] = Date.now();
+
+		// actually do the rollback
+		stage.rollback( 
+			runData ,
+			this._stageFailure.bind( this , key ) , // ( err ) => this.emitter.emit( 'failure' , key , err ) ,
+			this._stageWarning.bind( this , key ) , // ( warn , res ) => this.emitter.emit( 'warning' , key , warn , res ) ,
+			this._stageSuccess.bind( this , key ) , // ( res ) => this.emitter.emit( 'success' , key , res ) 
+		);
+
 	}
 
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -719,7 +751,7 @@ module.exports = class Coordinator {
 	//	"data" is any object that should be passed to an evalution of 
 	//	"execute" and "rollback" (as the first argument)
 	//
-	addStage( key , execute , rollback , retries , prereqs , prepare , data ) {
+	addStage( key , execute , rollback , retries , prereqs , prepare , repair , data ) {
 
 		// if there isn't at least one argument, return
 		if( typeof key === "undefined" ) { return; }
@@ -728,6 +760,7 @@ module.exports = class Coordinator {
 		if( arguments.length === 1 ) {
 			data 	 = key.data;
 			prepare  = key.prepare;
+			repair   = key.repair;
 			prereqs  = key.prereqs;
 			retries  = key.retries;
 			rollback = key.rollback;
@@ -747,7 +780,7 @@ module.exports = class Coordinator {
 		// retries as passed in should be a (base-10) integer
 		var retriesInt = parseInt( retries , 10 );
 
-		// prereqs has to be an empty array
+		// prereqs has to be an empty array not "undefined"
 		if( typeof prereqs === "undefined" ) { prereqs = []; }
 
 		// now, actually define the stage object
@@ -758,6 +791,7 @@ module.exports = class Coordinator {
 			prereqs  : ( Array.isArray( prereqs ) ? Object.assign( [] , prereqs ) : [ prereqs ] ) , 
 			prepare  : ( typeof prepare === "function" ? prepare : null ) , 
 			data 	 : ( data === Object(data) ? Object.assign( {} , data ) : data ), 
+			repair 	 : ( typeof repair === "function" ? repair : null ) , 
 			next 	 : [] , // this will have to be filled in by plan()
 			ready 	 : 1 , // may be overwritten by plan()
 		};
@@ -774,6 +808,7 @@ module.exports = class Coordinator {
 	//					retries  : ... , 
 	//					prereqs  : ... , 
 	//					prepare  : ... , 
+	//					repair   : ... , 
 	//					data     : ... } , 
 	//		  key2 : ... 
 	//		}

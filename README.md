@@ -22,8 +22,8 @@ Some other features:
 
 * **Retries:** `C.addStage( "op1" , op1ex , op1rb , 2 )` will retry this operation twice before declaring "failure"
 * **Prerequisites:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] )` declares that operation "2" has to follow operation "1"'s success (and that we should _not_ retry on failure)
-* **Intermediate results:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep )` will run `op2prep` on results of operation 1 and pass those to `op2ex`
-* **Initial data:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep , op2data )` will pass `op2data` to `op2ex` when it executes 
+* **Intermediate results:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep , op2rbrp )` will run `op2prep` on results of operation 1 and pass those to `op2ex` for execute, and `op2rbrp` on the results (including from `op2ex`) on rollback
+* **Initial data:** `C.addStage( "op2" , op2ex , op2rb , 0 , ["op1"] , op2prep , op2rbrp , op2data )` will pass `op2data` to `op2ex` when it executes 
 * **Intermediate Data Transformation:** Actually, `op2prep` acts on _both_ `op2data` and the results of prior operations to result in a single data object to pass to `op2ex`
 * **Warnings:** You can declare success in your execution routines even if you want to "throw" a warning, and the `Coordinator` object (`C`) will keep track of these warnings
 * **Results:** Your `Coordinator` object (`C`) will store all the results from each operation, if there are any, and you can access these after processing is complete (i.e., in the `onSuccess` callback you pass to `C.run`)
@@ -32,7 +32,7 @@ Some other features:
 
 If you haven't guessed by now, `C.addStage` has the prototype 
 ```
-	( key , execute , rollback , retries , prereqs , prepare , data ) => { ... }
+	( key , execute , rollback , retries , prereqs , prepare , repair , data ) => { ... }
 ```
 You can pass these arguments independently, as shown above, or you can pass them as a single object with these values (literally) as keys. The only real condition is that `execute` (or `key.execute` if you pass an object) is a function. There is also a routine `C.addStages` that takes either an `Object` or `Array` argument to add multiple stages. 
 
@@ -51,7 +51,7 @@ var C = new Coordinator() , prereq = [];
 opex.forEach( (o,i) => {
 	C.addStage( "op" + (i+1) , o , oprb[i] , 0 , prereq );
 	prereq = [ "op" + (i+1) ];
-} )gcuhnvtbldkfgldulnkifcditltdfbkgjvvvgregrhvl
+} )
 
 C.run( onFailure , onSuccess );
 ```
