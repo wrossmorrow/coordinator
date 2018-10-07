@@ -89,7 +89,19 @@ success: 9
 
 ### Testing with Coordinator
 
-Another decent use case for `Coordinator` is testing: You can run a sequence of possibly interdependent tests, failing at the first failure. 
+Another decent use case for `Coordinator` is testing: You can run a sequence of possibly interdependent (unit) tests, failing at the first failure. This can be useful for testing APIs involving network activity, like database updates/queries, such as the following test sequence (in "pseudocode"): 
+
+* `put`: `PUT /api/object { ... }`; if this returns `200` (and an ID) succeed passing the new object ID, otherwise fail. Delete the object on rollback.
+* `check`: `HEAD /api/object/:id`; if this returns `200` succeed, otherwise fail.
+* `get`: `GET /api/object/:id`; if this returns `200` and the data succeed, otherwise fail.
+* `delete`: `DELETE /api/object/:id`; if this returns `200` succeed, otherwise fail.
+* `recheck`: `HEAD /api/object/:id`; if this returns `200` fail, otherwise succeed.
+
+This sequence can have a slightly more complicated sequence of prerequisites: 
+```
+put -> ['check','get'] -> 'delete' -> 'recheck'
+```
+There is an example of this in `test/apiunittest.js`. 
 
 # To Do
 

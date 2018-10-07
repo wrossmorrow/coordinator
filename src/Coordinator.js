@@ -445,8 +445,8 @@ module.exports = class Coordinator {
 
 				if( this.stages[key].next.length > 0 ) {
 					this.stages[key].next.map( (s,i) => {
-						this.stages[s].ready += this.stages[s].nincr;
-						if( this.stages[s].ready >= 1 ) { this._runstage( s ); }
+						this.stages[s].ready += 1;
+						if( this.stages[s].ready >= this.stages[s].prereqs.length ) { this._runstage( s ); }
 					} );
 				}
 			}
@@ -530,8 +530,8 @@ module.exports = class Coordinator {
 				// if any depend on this stage, that is
 				if( this.stages[key].next.length > 0 ) {
 					this.stages[key].next.map( (s,i) => {
-						this.stages[s].ready += this.stages[s].nincr;
-						if( this.stages[s].ready >= 1 ) { this._runstage( s ); }
+						this.stages[s].ready += 1;
+						if( this.stages[s].ready >= this.stages[s].prereqs.length ) { this._runstage( s ); }
 					} );
 				}
 
@@ -760,7 +760,6 @@ module.exports = class Coordinator {
 			data 	 : ( data === Object(data) ? Object.assign( {} , data ) : data ), 
 			next 	 : [] , // this will have to be filled in by plan()
 			ready 	 : 1 , // may be overwritten by plan()
-			nincr    : 0.0 // may be overwritten by plan()
 		};
 
 		// increment the number of stages this coordinator is managing
@@ -824,11 +823,6 @@ module.exports = class Coordinator {
 
 	// create a "forward execution plan" from prerequisites... for each stage, 
 	// if it has prereqs, add its key in each of its prereq's "next" field. 
-	// also set the "ready" field for any stage with prereqs to zero, and the
-	// "next increment" (nincr) field to 1/#prereqs. This way, when a stage A 
-	// finishes, it can for each of its "next" stages, say B, increment stage 
-	// B's "ready" field by B's increment and, if the ready field is >= 1, 
-	// then stage B can be run. 
 	plan(  ) {
 
 		// initialize, or we will have problems planning multiple times
@@ -838,8 +832,6 @@ module.exports = class Coordinator {
 		Object.keys( this.stages ).forEach( s => {
 			if( this.stages[s].prereqs.length > 0 ) {
 				this.stages[s].prereqs.forEach( (p,j) => { this.stages[p].next.push( s ); } );
-				this.stages[s].ready = 0;
-				this.stages[s].nincr = 1.0 / parseFloat( this.stages[s].prereqs.length );
 			}
 		} );
 
@@ -863,16 +855,11 @@ module.exports = class Coordinator {
 		// actually populate this new plan
 		Object.keys( this.stages ).forEach( (k,i) => {
 			if( this.stages[k].next.length > 0 ) {
-				this.stages[k].nincr = 1.0 / parseFloat( this.stages[k].next.length );
-				this.stages[k].ready = 0;
 				this.stages[k].next.forEach( (n,j) => {
 					// for each "next" element p in stage k, make k a "next" element
 					// of p... but we can't overwrite p.next until we are done...
 					new_next[n].next.push( k ); 
 				} );
-			} else {
-				this.stages[k].nincr = 0.0;
-				this.stages[k].ready = 1;
 			}
 		} );
 
@@ -977,7 +964,7 @@ module.exports = class Coordinator {
 		// initialize "stage state" object and the ready value
 		Object.keys( this.stages ).forEach( s => { 
 			this.state[s] = 0; 
-			this.stages[s].ready = ( this.stages[s].prereqs.length > 0 ? 0 : 1 );
+			this.stages[s].ready = 0; // ( this.stages[s].prereqs.length > 0 ? 0 : 1 );
 		} );
 
 		// other initializations
@@ -993,8 +980,8 @@ module.exports = class Coordinator {
 		if( this.verbose ) { this.log( "running..." ); }
 
 		// attempt to execute all the stages that have * no * prerequisites
-		Object.keys( this.stages ).map( (key,i) => {
-			if( this.stages[key].ready >= 1 ) { this._runstage( key ); }
+		Object.keys( this.stages ).map( s => {
+			if( this.stages[s].ready >= this.stages[s].prereqs.length ) { this._runstage( s ); }
 		} );
 
 	}

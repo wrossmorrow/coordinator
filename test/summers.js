@@ -20,8 +20,10 @@ for( var i = 0 ; i < keys.length ; i++ ) {
 	p = [ key ];
 }
 
+C.quiet();
+
 const failed  = ( f , e ) => { console.log( "failed" ); if( f ) { f( e ); } };
-const success = ( s , r ) => { console.log( "success: " + C.getResults()[keys[keys.length-1]] ); if( s ) { s( r ); } };
+const success = ( s , r ) => { console.log( "success: " + r[keys[keys.length-1]] ); if( s ) { s( r ); } };
 const execute = ( d , f , w , s ) => { C.run( failed.bind(this,f) , success.bind(this,s) , d ); };
 
 var D = new Coordinator();
@@ -34,4 +36,4 @@ D.addStage( { key : "run2" , execute : execute , prereqs : ["run1"] , data : X }
 X.sue = 10;
 D.addStage( { key : "run3" , execute : execute , prereqs : ["run2"] , data : X } );
 
-D.run( failed.bind(this,null) , success.bind(this,null) );
+D.run( () => { console.log( "failed" ); } , () => { console.log( "success" ); } );

@@ -2,32 +2,29 @@
 const Coordinator = require( './../src/Coordinator.js' );
 
 function fakeFunction( s , data , failure , warning , success ) {
+	var time = 3 * Math.random() * 1000
 	var timer = setTimeout( () => {
-		console.log( "ff: " + s , data );
+		console.log( "fakeFunction(" + s + "," + (parseFloat(time)/1000.0).toFixed(2) + "): " + data );
 		success( data );
-	} , 3 * Math.random() * 1000 );
+	} , time );
 }
 
 function noop( data , failure , warning , success ) { success(); }
 
-function cSuccess( C , clear ) {
+function success( C , clear ) {
 	console.log( C.getId() + ":: coordinated runs (" + C.getStages() + ") succeeded" );
 
 	console.log( "Results: " , C.getResults() );
 
 	if( clear && C.clear ) { C.clear(); }
 }
-function cFailure( C , clear ) {
+function failure( C , clear ) {
 	console.log( C.getId() + ":: coordinated runs (" + C.getStages() + ") failed" );
 	if( clear && C.clear ) { C.clear(); }
 }
 
 const A = new Coordinator();
-
-const B = new Coordinator();
-
 console.log( "A: " + A.getId() );
-console.log( "B: " + B.getId() );
 
 var previous = [];
 ["1","2","3"].forEach( s => {
@@ -51,6 +48,18 @@ var previous = [];
 
 console.log( A.isDAG() );
 
+var Atimer = setInterval( () => {
+	console.log( A.getId() + ":: coordinated runs (" + A.getStages() + ") starting" );
+	A.run( 
+		failure.bind( this , A , false ) , 
+		success.bind( this , A , false ) , 
+	);
+} , 10 * 1000 );
+
+
+const B = new Coordinator();
+console.log( "B: " + B.getId() );
+
 var prereq = ["8"];
 ["5","6","7","8"].forEach( s => {
 	B.addStage( 
@@ -67,14 +76,6 @@ var prereq = ["8"];
 B.quiet();
 
 console.log( B.isDAG() );
-
-var Atimer = setInterval( () => {
-	console.log( A.getId() + ":: coordinated runs (" + A.getStages() + ") starting" );
-	A.run( 
-		cFailure.bind( this , A , false ) , 
-		cSuccess.bind( this , A , false ) , 
-	);
-} , 10 * 1000 );
 
 /*
 var Btimer = setInterval( () => {
