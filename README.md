@@ -75,7 +75,7 @@ const prep = ( d , p , r ) => ( { sum : r[p[0]] , value : d } );
 var C = new Coordinator() , p = [] , keys = Object.keys( X );
 for( var i = 0 ; i < keys.length ; i++ ) {
 	var key = keys[i];
-	C.addStage( key , sumr , () => {} , 0 , p , prep , X[key] );
+	C.addStage( key , sumr , () => {} , 0 , p , prep , null , X[key] );
 	p = [ key ];
 }
 C.run( onFailure , () => { console.log( "success: " + C.getResults()[keys[keys.length-1]] ) } );
@@ -97,9 +97,9 @@ Another decent use case for `Coordinator` is testing: You can run a sequence of 
 * `delete`: `DELETE /api/object/:id`; if this returns `200` succeed, otherwise fail.
 * `recheck`: `HEAD /api/object/:id`; if this returns `200` fail, otherwise succeed.
 
-This sequence can have a slightly more complicated sequence of prerequisites: 
+This sequence can have a slightly more complicated sequence of prerequisites, those working backwards in the following DAG:  
 ```
-put -> ['check','get'] -> 'delete' -> 'recheck'
+'put' -> ['check','get'] -> 'delete' -> 'recheck'
 ```
 There is an example of this in `test/apiunittest.js`. 
 
