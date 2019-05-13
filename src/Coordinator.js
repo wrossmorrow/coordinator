@@ -32,7 +32,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const TG = require('./src/tarjan-graph.js')
+const TG = require('./tarjan-graph.js')
 
 const EventEmitter = require( 'events' );
 const _crypto = require( 'crypto' );
