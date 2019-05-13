@@ -111,7 +111,7 @@ There is an example of this in `test/apiunittest.js`.
 
 # Contact 
 
-[W. Ross Morrow](wrossmorrow@stanford.edu)
+[W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 
 [Stanford GSB DARC Team](mailto:gsb_circle_research@stanford.edu)
 

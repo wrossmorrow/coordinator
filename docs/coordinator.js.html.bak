@@ -20,11 +20,11 @@
 /**
  * @module coordinator
  * @description This module defines the `Coordinator` class for directed, acyclic asynchronous 
- * 			task processing. See <a href="https://code.stanford.edu/wrossmorrow/coordinator">here</a> for more
- *			details. Also includes the full content of <a href="https://github.com/tmont/tarjan-graph">tarjan-graph</a> 
+ * 			task processing. See [here](https://code.stanford.edu/wrossmorrow/coordinator) for more
+ *			details. Also includes the full content of [tarjan-graph](https://github.com/tmont/tarjan-graph) 
  *			(with permission) to test graphs defined for cycles. 
  * 
- * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+ * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
  */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
@@ -79,7 +79,7 @@ class Coordinator {
 	 * 
 	 * @example var C = new Coordinator();
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	constructor( ) {
 		this._id = getHash();			// some random digits
@@ -127,7 +127,7 @@ class Coordinator {
 	 *			prerequisites. For each stage, if it has prereqs, add its `key` in each of its 
 	 *			prereq's `next` field. 
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_plan(  ) {
 		// initialize, or we will have problems planning multiple times
@@ -150,7 +150,7 @@ class Coordinator {
 	 *			become `prereqs`, implicitly, which become a new `next` plan. But we also can 
 	 *			ignore anything that hasn't been run yet as this is executed in rollbacks. 
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_nalp(  ) {
 		// create an empty, new * reverse * execution plan
@@ -190,7 +190,7 @@ class Coordinator {
 	 * @param {object} key Error object describing why it failed as passed to `failure` by the 
 	 * 			stage's `execute` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_stageFailure( key , err ) { this.emitter.emit( 'failure' , key , err ); }
 	/**
@@ -204,7 +204,7 @@ class Coordinator {
 	 * @param {object} warn Object with information about the warning
 	 * @param {object} res Results object passed to `warning` by the stage's `execute` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_stageWarning( key , warn , res ) { this.emitter.emit( 'warning' , key , warn , res ); }
 	/**
@@ -216,7 +216,7 @@ class Coordinator {
 	 * @param {string} key `key` of the stage that succeeded
 	 * @param {object} res Results object passed to `success` by the stage's `execute` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_stageSuccess( key , res ) { this.emitter.emit( 'success' , key , res ); }
 	/**
@@ -226,7 +226,7 @@ class Coordinator {
 	 * 
 	 * @param {string} key `key` of the stage to run
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_runstage( key ) {
 		// get a convenience object for this stage
@@ -287,7 +287,7 @@ class Coordinator {
 	 * @param {function} warning Callback for success with a warning
 	 * @param {function} success Callback for success
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_noRollback( data , failure , warning , success ) { success(); }
 	/**
@@ -297,7 +297,7 @@ class Coordinator {
 	 * 
 	 * @param {string} key `key` of the stage to rollback
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_rollback( key ) {
 		// get a convenience object for this stage
@@ -350,7 +350,7 @@ class Coordinator {
 	 * @param {string} key `key` of the stage that succeeded
 	 * @param {object} res Results passed to `success` by the stage's `execute` or `rollback` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_success( key , res ) {
 		// console.log( "Success" , key , Object.keys( this.stages ) );
@@ -417,7 +417,7 @@ class Coordinator {
 	 * @param {object} warn Object describing warning as passed to `warning` by the stage's `execute` or `rollback` function
 	 * @param {object} res Results passed to `warning` by the stage's `execute` or `rollback` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_warning( key , warn , res ) {
 		// console.log( "Warning" , key , Object.keys( this.stages ) );
@@ -490,7 +490,7 @@ class Coordinator {
 	 * @param {string} key `key` of the stage that succeeded with a warning
 	 * @param {object} err Error object passed to `failure` by the stage's `execute` or `rollback` function
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_failure( key , err ) {
 		// console.log( "Failure" , key , Object.keys( this.stages ) );
@@ -568,7 +568,7 @@ class Coordinator {
 	 *			or rollbacks. This function is what ultimately calls the `success` and `failure` 
 	 *			routines passed to `Coordinator.run`. 
 	 * 		
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	_finished(  ) { 
 		if( this.verbose ) { this.log( "All stages finished." ); }
@@ -599,7 +599,7 @@ class Coordinator {
 	 * 
 	 * @example C.log( "some text" );
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	log( s ) { log( "Coordinator(" + this._id + "):: " + s ); }
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -621,7 +621,7 @@ class Coordinator {
 	 * 
 	 * @example console.log( "Coordinator C has id: " + C.getId() );
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	getId() { return this._id; }
 	/** 
@@ -635,7 +635,7 @@ class Coordinator {
 	 * 
 	 * @example var results = C.getResults();
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	getResults() { return this.results; }
 	/** 
@@ -647,7 +647,7 @@ class Coordinator {
 	 * 
 	 * @example var stages = C.getStages();
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	getStages() { return Object.keys( this.stages ); }
 	/** 
@@ -659,7 +659,7 @@ class Coordinator {
 	 * 
 	 * @example console.log( C.printStages() );
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	printStages() { return Object.keys( this.stages ).join(", "); }
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -750,7 +750,7 @@ class Coordinator {
 	 * 			add (@see addStage) or as an `object` whose fields are the `key`s and 
 	 *			corresponding values are the stage specifications. 
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	addStages( stages ) {
 		if( Array.isArray( stages ) ) {
@@ -768,7 +768,7 @@ class Coordinator {
 	 * 
 	 * @param {string} key `key` of the stage to be dropped
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	dropStage( key ) {
 		if( key in this.stages ) { 
@@ -786,7 +786,7 @@ class Coordinator {
 	 * @param {array|object|string} keys Attempt to drop the stages specified with an `array` of 
 	 *			`key`s, `object` whose fields are the `key`s, or a single string `key`
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	dropStages( keys ) {
 		if( Array.isArray( keys ) ) {
@@ -811,7 +811,7 @@ class Coordinator {
 	/** 
 	 * @function
 	 * @public
-	 * @description Test `Coordinator` Stages for <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">DAG</a> 
+	 * @description Test `Coordinator` Stages for [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) 
 	 *			property (no cycles). This is done using the Tarjan algorithm, as implemented in 
 	 *			the `tarjan-graph` module (included explicitly here with permission). 
 	 * 
@@ -824,7 +824,7 @@ class Coordinator {
 	 *     C.log( "There is a cycle" ); 
 	 * }
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	isDAG() {
 		if( ! this.planned ) { this._plan(); } 			// define the forward execution plan
@@ -850,7 +850,7 @@ class Coordinator {
 	 * 
 	 * @example C.clear();
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	clear() {
 		if( this.verbose ) { this.log( "clearing..." ); }
@@ -896,7 +896,7 @@ class Coordinator {
 	 * 
 	 * @example C.run( (e)=>{ C.log(e.toString()); } , (r)=>{C.log("success!");} );
 	 * 
-	 * @author <a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a>
+	 * @author [W. Ross Morrow](mailto:wrossmorrow@stanford.edu)
 	 */ 
 	run( failure , success , data ) {
 		// make sure the forward execution plan is prepared (even though we would build it

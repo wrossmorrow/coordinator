@@ -20,14 +20,14 @@
 <article>
     <div class="container-overview">
             <div class="description">This module defines the `Coordinator` class for directed, acyclic asynchronous 
-			task processing. See <a href="https://code.stanford.edu/wrossmorrow/coordinator">here</a> for more
-			details. Also includes the full content of <a href="https://github.com/tmont/tarjan-graph">tarjan-graph</a> 
+			task processing. See [here](https://code.stanford.edu/wrossmorrow/coordinator) for more
+			details. Also includes the full content of [tarjan-graph](https://github.com/tmont/tarjan-graph) 
 			(with permission) to test graphs defined for cycles.</div>
 <dl class="details">
     <dt class="tag-author">Author:</dt>
     <dd class="tag-author">
         <ul>
-            <li><a href="mailto:wrossmorrow@stanford.edu">W. Ross Morrow</a></li>
+            <li>[W. Ross Morrow](mailto:wrossmorrow@stanford.edu)</li>
         </ul>
     </dd>
     <dt class="tag-source">Source:</dt>
