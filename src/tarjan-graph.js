@@ -13,7 +13,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-export class Vertex {
+class Vertex {
 
 	constructor(name, successors) {
 		this.name = name;
@@ -30,7 +30,7 @@ export class Vertex {
 
 }
 
-export class Graph {
+exports.Graph = class Graph {
 
 	constructor() {
 		this.vertices = {};
