@@ -1,6 +1,6 @@
 {
   "name": "daat-coordinator",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A Directed Acyclic Asynchronous Task (DAAT) processor",
   "main": "index.js",
   "scripts": {
