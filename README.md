@@ -2,6 +2,8 @@
 
 `daat-coordinator` is a `node.js` module for specifying asynchronous operations in a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles). 
 
+You can review the technical documentation [here](https://www.wrossmorrow.org/coordinator/)
+
 ### A Simple, Motivating Example: Concurrent Async Operations
 
 The basic use case motivating this module was the following: We have a web app backend server that has to make several (async) database calls for a particular API route; but we want to reply to the calling client with "success" _only_ if *all* database updates were succesful, and with "failed" if *any* failed (also negating any partial updates). In this case it is possible to nest callbacks, but after 3 or 4 updates this starts to get confusing especially when including logic for rolling back successful updates. Nesting callbacks also imposes a logic order on the program flow that need not formally exist for properly concurrent operations. Basically, we don't care which happens (or finishes) first, just that they both finish (and if they both succeeded). 

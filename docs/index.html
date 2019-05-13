@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Coordinator</h1>
+<p><code>daat-coordinator</code> is a <code>node.js</code> module for specifying asynchronous operations in a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">Directed Acyclic Graph (DAG)</a> structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles).</p>
+<h3>A Simple, Motivating Example: Concurrent Async Operations</h3>
+<p>The basic use case motivating this module was the following: We have a web app backend server that has to make several (async) database calls for a particular API route; but we want to reply to the calling client with &quot;success&quot; <em>only</em> if <em>all</em> database updates were succesful, and with &quot;failed&quot; if <em>any</em> failed (also negating any partial updates). In this case it is possible to nest callbacks, but after 3 or 4 updates this starts to get confusing especially when including logic for rolling back successful updates. Nesting callbacks also imposes a logic order on the program flow that need not formally exist for properly concurrent operations. Basically, we don't care which happens (or finishes) first, just that they both finish (and if they both succeeded).</p>
+<p><code>Coordinator</code> allows one to do this as follows: Say we write functions <code>op1ex</code>/<code>op1rb</code> to execute/rollback operation &quot;1&quot;, <code>op2ex</code>/<code>op2rb</code> to execute/rollback operation &quot;2&quot;, etc. Suppose also we have functions <code>onFailure</code> and <code>onSuccess</code> that we want to execute when <em>any</em> operation fails or <em>every</em> operation succeeds, respectively. Then the code</p>
+<pre class="prettyprint source"><code>const Coordinator = require( 'daat-coordinator' );
+var C = new Coordinator();
+C.addStage( &quot;op1&quot; , op1ex , op1rb );
+C.addStage( &quot;op2&quot; , op2ex , op2rb );
+C.run( onFailure , onSuccess );
+</code></pre>
+<p>will execute operations &quot;1&quot; and &quot;2&quot; concurrently, calling <code>onFailure</code> if <em>any</em> operation fails or <code>onSuccess</code> if <em>every</em> operation succeeds. Moreover, if <code>op1ex</code> fails but <code>op2ex</code> succeeds, <code>op2rb</code> will be called and vice versa. Besides being a bit simpler than (many) nested callbacks, the explicit separation between operations &quot;1&quot; and &quot;2&quot; can also make it easier to program and debug them.</p>
+<h3>Other Features</h3>
+<p>Some other features:</p>
+<ul>
+<li><strong>Retries:</strong> <code>C.addStage( &quot;op1&quot; , op1ex , op1rb , 2 )</code> will retry this operation twice before declaring &quot;failure&quot;</li>
+<li><strong>Prerequisites:</strong> <code>C.addStage( &quot;op2&quot; , op2ex , op2rb , 0 , [&quot;op1&quot;] )</code> declares that operation &quot;2&quot; has to follow operation &quot;1&quot;'s success (and that we should <em>not</em> retry on failure)</li>
+<li><strong>Intermediate results:</strong> <code>C.addStage( &quot;op2&quot; , op2ex , op2rb , 0 , [&quot;op1&quot;] , op2prep , op2rbrp )</code> will run <code>op2prep</code> on results of operation 1 and pass those to <code>op2ex</code> for execute, and <code>op2rbrp</code> on the results (including from <code>op2ex</code>) on rollback. These functions (<code>op2prep</code>/<code>op2rbrp</code>) have the prototype <code>( data , prereqs , results ) =&gt; { ... }</code> where <code>data</code> will be the data passed to this stage and <code>results</code> will be the current <code>coordinator</code> results object for all stages.</li>
+<li><strong>Initial data:</strong> <code>C.addStage( &quot;op2&quot; , op2ex , op2rb , 0 , [&quot;op1&quot;] , op2prep , op2rbrp , op2data )</code> will pass <code>op2data</code> to <code>op2ex</code> when it executes</li>
+<li><strong>Intermediate Data Transformation:</strong> Actually, <code>op2prep</code> acts on <em>both</em> <code>op2data</code> and the results of prior operations to result in a single data object to pass to <code>op2ex</code></li>
+<li><strong>Warnings:</strong> You can declare success in your execution routines even if you want to &quot;throw&quot; a warning, and the <code>Coordinator</code> object (<code>C</code>) will keep track of these warnings</li>
+<li><strong>Results:</strong> Your <code>Coordinator</code> object (<code>C</code>) will store all the results from each operation, if there are any, and you can access these after processing is complete (i.e., in the <code>onSuccess</code> callback you pass to <code>C.run</code>)</li>
+<li><strong>Different Data:</strong> If you want to re-run a given set of stages with different initial stage data, you can just add that to the <code>C.run</code> call: <code>C.run( onFailure , onSuccess , newData )</code>.</li>
+<li><strong>Checking for Cycles:</strong> You can check if your stages are a DAG (a graph with no cycles) using the method <code>C.isDAG()</code>. This currently implements the <a href="https://github.com/tmont/tarjan-graph"><code>tarjan-graph</code></a> module.</li>
+</ul>
+<p>If you haven't guessed by now, <code>C.addStage</code> has the prototype</p>
+<pre class="prettyprint source"><code>( key , execute , rollback , retries , prereqs , prepare , repair , data ) => { ... }
+</code></pre>
+<p>You can pass these arguments independently, as shown above, or you can pass them as a single object with these values (literally) as keys. The only real condition is that <code>execute</code> (or <code>key.execute</code> if you pass an object) is a function. There is also a routine <code>C.addStages</code> that takes either an <code>Object</code> or <code>Array</code> argument to add multiple stages.</p>
+<p>We haven't mentioned how tasks can &quot;fail&quot; or &quot;succeed&quot;. Really, this is up to you in your execution (and rollback) routines. <code>Coordinator</code> <em>learns</em> about this through callbacks passed to the execution and rollback routines, which must both have the prototype</p>
+<pre class="prettyprint source"><code>( data , failure , warning , success ) => { ... }
+</code></pre>
+<p><code>Coordinator</code> expects these routines to call <code>failure(err)</code> (with an error argument) when there is an error, <code>warning(warn,res)</code> when there is a conditional success (with a warning and result objects), and <code>success(res)</code> when there is success (with a result object). Otherwise they can do what you want (asynchronously).</p>
+<h3>Sequential Operations with Coordinator</h3>
+<p>Let's say you have some <code>N</code> (async) operations to run, in sequence. This is challenging only in that you want one to start only after another has completed, and you don't know exactly when that happens. Suppose their execution routines are in an <code>N</code>-element array <code>opex</code>, rollbacks in an <code>N</code>-element array <code>oprb</code>, and operation <code>n</code> depends only on <code>n-1</code> (for <code>n &gt; 0</code>). Then you could setup <code>Coordinator</code> to do all of these with</p>
+<pre class="prettyprint source"><code>const Coordinator = require( 'daat-coordinator' );
+var C = new Coordinator() , prereq = [];
+opex.forEach( (o,i) => {
+	C.addStage( &quot;op&quot; + (i+1) , o , oprb[i] , 0 , prereq );
+	prereq = [ &quot;op&quot; + (i+1) ];
+} )
+
+C.run( onFailure , onSuccess );
+</code></pre>
+<p>For a silly but tangible example, suppose we wanted to use <code>Coordinator</code> to sum up the values in a key-value store:</p>
+<pre class="prettyprint source"><code>X = { key1 : value1 , ... , keyN : valueN }
+</code></pre>
+<p>We could then do</p>
+<pre class="prettyprint source"><code>const Coordinator = require( 'daat-coordinator' );
+
+const sumr  = ( d , f , w , s ) => { 
+	setTimeout( () => {
+		if( d === Object(d) ) { s( d.sum + d.value ); } else { s( d ); };
+	} , 10 )
+};
+
+const prep = ( d , p , r ) => ( { sum : r[p[0]] , value : d } );
+
+var C = new Coordinator() , p = [] , keys = Object.keys( X );
+for( var i = 0 ; i &lt; keys.length ; i++ ) {
+	var key = keys[i];
+	C.addStage( key , sumr , () => {} , 0 , p , prep , null , X[key] );
+	p = [ key ];
+}
+C.run( onFailure , () => { console.log( &quot;success: &quot; + C.getResults()[keys[keys.length-1]] ) } );
+</code></pre>
+<p>The specific values <code>{ &quot;bob&quot; : 2 , &quot;sue&quot; : 3 , &quot;joe&quot; : 4 }</code> ultimately yeilds</p>
+<pre class="prettyprint source"><code>success: 9
+</code></pre>
+<p><strong>Note</strong> that our <code>sumr</code> callback here does something weird: it sets a timeout to execute a simple function. This is, actually, required (as of now), even if we set the timeout to <code>0</code> instead of <code>10</code>. <code>Coordinator</code> is intended for <em>asynchronous</em> tasks that act in some way like &quot;forked&quot; processes. It is not suitable for, and can (as of now) get confused by, traditional sequential programs as executors.</p>
+<h3>Testing with Coordinator</h3>
+<p>Another decent use case for <code>Coordinator</code> is testing: You can run a sequence of possibly interdependent (unit) tests, failing at the first failure. This can be useful for testing APIs involving network activity, like database updates/queries, such as the following test sequence (in &quot;pseudocode&quot;):</p>
+<ul>
+<li><code>put</code>: <code>PUT /api/object { ... }</code>; if this returns <code>200</code> (and an ID) succeed passing the new object ID, otherwise fail. Delete the object on rollback.</li>
+<li><code>check</code>: <code>HEAD /api/object/:id</code>; if this returns <code>200</code> succeed, otherwise fail.</li>
+<li><code>get</code>: <code>GET /api/object/:id</code>; if this returns <code>200</code> and the data succeed, otherwise fail.</li>
+<li><code>delete</code>: <code>DELETE /api/object/:id</code>; if this returns <code>200</code> succeed, otherwise fail.</li>
+<li><code>recheck</code>: <code>HEAD /api/object/:id</code>; if this returns <code>200</code> fail, otherwise succeed.</li>
+</ul>
+<p>This sequence can have a slightly more complicated sequence of prerequisites, those working backwards in the following DAG:</p>
+<pre class="prettyprint source"><code>'put' -> ['check','get'] -> 'delete' -> 'recheck'
+</code></pre>
+<p>There is an example of this in <code>test/apiunittest.js</code>.</p>
+<h1>To Do</h1>
+<ul>
+<li>rollback with prequisites, using partial execution graph in reverse.</li>
+</ul>
+<h1>Contact</h1>
+<p><a href="wrossmorrow@stanford.edu">W. Ross Morrow</a></p>
+<p><a href="mailto:gsb_circle_research@stanford.edu">Stanford GSB DARC Team</a></p></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-coordinator.html">coordinator</a></li></ul><h3>Classes</h3><ul><li><a href="module-coordinator-Coordinator.html">Coordinator</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.1</a> on Mon May 13 2019 10:22:12 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
