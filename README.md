@@ -1,6 +1,6 @@
 # Coordinator
 
-This is a `node.js` module for specifying asynchronous operations in a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles). 
+`daat-coordinator` is a `node.js` module for specifying asynchronous operations in a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) structure. That is sequences of tasks that must be completed, where some may depend on the results of others (without cycles). 
 
 ### A Simple, Motivating Example: Concurrent Async Operations
 
@@ -32,7 +32,7 @@ Some other features:
 
 If you haven't guessed by now, `C.addStage` has the prototype 
 ```
-	( key , execute , rollback , retries , prereqs , prepare , repair , data ) => { ... }
+( key , execute , rollback , retries , prereqs , prepare , repair , data ) => { ... }
 ```
 You can pass these arguments independently, as shown above, or you can pass them as a single object with these values (literally) as keys. The only real condition is that `execute` (or `key.execute` if you pass an object) is a function. There is also a routine `C.addStages` that takes either an `Object` or `Array` argument to add multiple stages. 
 
@@ -111,7 +111,7 @@ There is an example of this in `test/apiunittest.js`.
 
 [W. Ross Morrow](wrossmorrow@stanford.edu)
 
-[Stanford GSB RSS Team](mailto:gsb_circle_research@stanford.edu)
+[Stanford GSB DARC Team](mailto:gsb_circle_research@stanford.edu)
 
 
 

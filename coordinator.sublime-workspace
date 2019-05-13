@@ -256,16 +256,17 @@
 	},
 	"file_history":
 	[
-		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/Coordinator.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/package.json",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/index.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/tarjan-graph.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/Coordinator.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/README.md",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/test.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/index.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/.gitignore",
-		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/test.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/summer.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/summers.js",
-		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/README.md",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/apiunittest.js",
-		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/tarjan-graph.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/Coordinator.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/yenaccess/server/src/coordinator.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/yenaccess/server/service/yenaccess.start",
@@ -382,8 +383,7 @@
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/fakelaunch.py",
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/fakelinks.py",
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/tester.sh",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/lambda/spcfe-fakeexp.py",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/backend.js"
+		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/lambda/spcfe-fakeexp.py"
 	],
 	"find":
 	{
@@ -401,6 +401,7 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"coordinator.js",
 			"map",
 			"prepare",
 			".ready",
@@ -527,8 +528,7 @@
 			"delete",
 			"game",
 			"gameActions",
-			"toggleDelay",
-			"elay"
+			"toggleDelay"
 		],
 		"highlight": true,
 		"in_selection": false,
