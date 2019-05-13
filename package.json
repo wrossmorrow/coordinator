@@ -1,16 +1,16 @@
 {
-  "name": "coordinator",
-  "version": "0.1.0",
-  "description": "A Directed Acyclic Graph processor for sequences of async operations",
-  "main": "src/index.js",
+  "name": "daat-coordinator",
+  "version": "1.0.0",
+  "description": "A Directed Acyclic Asynchronous Task (DAAT) processor",
+  "main": "index.js",
   "scripts": {
     "test": "node test/test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/circleresearch/coordinator.git"
+    "url": "git@code.stanford.edu:morrowwr/coordinator.git"
   },
-  "author": "W. Ross Morrow",
+  "author": "W. Ross Morrow <wrossmorrow@stanford.edu> (https://wrossmorrow.com)",
   "license": "ISC",
-  "homepage": "https://bitbucket.org/circleresearch/coordinator#readme"
+  "homepage": "https://code.stanford.edu/morrowwr/coordinator#readme"
 }

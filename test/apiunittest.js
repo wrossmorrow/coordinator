@@ -34,7 +34,7 @@ C.addStage( {
 
 // does the object exist? 
 C.addStage( { 
-	key 	 : "head" , 
+	key 	 : "check" , 
 	execute  : ( data , failure , warning , success ) => {
 		axios.head( APIUrl + "/object/" + data.id ) 
 			.then( res => { success(  ); } )
@@ -64,7 +64,7 @@ C.addStage( {
 			.then( res => { success(  ); } )
 			.catch( err => { failure( err ); } )
 	} , 
-	prereqs  : [ "head" , "get" ] , 
+	prereqs  : [ "check" , "get" ] , 
 	prepare  : ( data , prereqs , results ) => ( { id : results["put"] } ) ,
 } );
 

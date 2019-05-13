@@ -231,14 +231,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "Coordinator.js",
-			"settings":
-			{
-				"buffer_size": 25419,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "",
 	"command_palette":
@@ -264,6 +256,17 @@
 	},
 	"file_history":
 	[
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/Coordinator.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/package.json",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/index.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/.gitignore",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/test.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/summer.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/summers.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/README.md",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/test/apiunittest.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/src/tarjan-graph.js",
+		"/Users/morrowwr/Work/Projects/CIRCLERSS/coordinator/Coordinator.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/yenaccess/server/src/coordinator.js",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/yenaccess/server/service/yenaccess.start",
 		"/Users/morrowwr/Work/Projects/CIRCLERSS/yenaccess/server/service/yenaccess.stop",
@@ -380,18 +383,7 @@
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/fakelinks.py",
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/tester.sh",
 		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/lambda/spcfe-fakeexp.py",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/backend.js",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/server.js",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/webpack.config.server.js",
-		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/index.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/ABCModal/ABCModal.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/FinishedGameTable/FinishedGameTable.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/App/App.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/GameTable/GameTable.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/Editor/Editor.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/components/Root/Root.js",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/package.json",
-		"/Users/morrowwr/Work/Projects/Halevy/ABC/habc/clients/admin/src/index.js"
+		"/Users/morrowwr/Work/Projects/Simonson/choiceframing/simonson-framing/server/backend.js"
 	],
 	"find":
 	{
@@ -409,6 +401,18 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"map",
+			"prepare",
+			".ready",
+			"nincr",
+			".ready",
+			"nincr",
+			"nalp",
+			"test",
+			"test()",
+			"test",
+			"_finished",
+			"prepare",
 			"reminded-",
 			"request-app",
 			"failure( ",
@@ -524,19 +528,7 @@
 			"game",
 			"gameActions",
 			"toggleDelay",
-			"elay",
-			"_handleStartClick",
-			"<Link",
-			"Link",
-			"GameTemplates",
-			"Forward",
-			"session",
-			"SaveButt",
-			"saveButtonAction",
-			"Retart",
-			"channel_report_var",
-			"channel_topic_coverage",
-			"consumer_expected_topic"
+			"elay"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -558,36 +550,8 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "Coordinator.js",
-					"settings":
-					{
-						"buffer_size": 25419,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								25419,
-								25419
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 9782.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
 			]
 		}
 	],
